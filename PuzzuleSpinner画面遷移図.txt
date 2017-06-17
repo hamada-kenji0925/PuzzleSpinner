@@ -1,0 +1,29 @@
+[top]
+タイトル絵表示
+--
+ゲームプレイ
+==> Game
+ランキング確認
+==> Ranking
+設定
+==> Setting
+
+[Game]
+ゲームプレイ画面
+==> Result
+
+[Result]
+結果表示
+--
+ランキング確認
+==> Ranking
+設定
+==> Setting
+
+[Ranking]
+ランキング表示
+--
+
+[Setting]
+音量設定
+--
