@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
+//Listの為、定義
+using System.Collections.Generic;
 
 public class PuzzleController : MonoBehaviour
 {
@@ -19,6 +21,11 @@ public class PuzzleController : MonoBehaviour
 	[SerializeField]
 	private int PuzzleY = 1;
 
+	//3色判定が終わった後のブロック座標を格納
+	private List<Vector2> zahyoBlock = new List<Vector2>();
+
+	//一致パズル数カウント用
+	private int count;
 
 	// Use this for initialization
 	void Start ()
@@ -34,9 +41,6 @@ public class PuzzleController : MonoBehaviour
 		GameObject go = GetClickPzzleBlock();
 		//クリック判定
 		if (go != null) {
-			//Debug.Log ("クリックされた配列位置は" + go.GetComponent<PuzzleBlock> ().BlockPosition);
-			//Debug.Log("クリックされたピース色は" + go.GetComponent<PuzzleBlock> ().ColorNum);
-			//Debug.Log(PuzzleBlockAry[(int)go.GetComponent<PuzzleBlock> ().BlockPosition.y,(int)go.GetComponent<PuzzleBlock> ().BlockPosition.x]);
 			bool judge = JudgePuzzleBlock(go);
 		}
 	}
@@ -47,40 +51,153 @@ public class PuzzleController : MonoBehaviour
 	/// <returns>The puzzle block.</returns>
 	/// <param name="puzzleBlock">Puzzle block.</param>
 	private bool JudgePuzzleBlock(GameObject puzzleBlock){
-		//同色カウント変数
-		int count = 1;
+		//初回クリックされた時には１代入
+		count = 1;
+		//カウントインクリメントで繰り返し処理を実行させる為、現在のカウント数を退避させる
+		int countTmp = count;
 
 		//選択されたBlockのポジション(二次元配列の要素数)を取得
 		int selectX = (int)puzzleBlock.GetComponent<PuzzleBlock>().BlockPosition.x;
 		int selectY = (int)puzzleBlock.GetComponent<PuzzleBlock>().BlockPosition.y;
 		int selectColor = puzzleBlock.GetComponent<PuzzleBlock> ().ColorNum;
 
-		//選択された上下左右のパズルを確認に同色かを判断
-		for (int i = 0; i < PuzzleY; i++) {
-			for (int j = 0; j < PuzzleX; j++) {
-				
+		//-初回-色判定したパズル座標を格納しておく配列の確認
+		zahyoBlock.Add(new Vector2(selectY,selectX));
+
+		//タッチされたパズルの上下左右の色を取得(重複しない99を指定
+		int upColor = 99;
+		int downColor = 99;
+		int leftColor = 99;
+		int rightColor = 99;
+
+		upColor = GetUpColor (selectX, selectY);
+		downColor = GetDownColor (selectX, selectY);
+		leftColor = GetLeftColor (selectX, selectY);
+		rightColor = GetRightColor (selectX, selectY);
+
+		//タッチしたパズル色と上下左右に該当する色があるかどうか
+		if (selectColor == upColor) {
+			count += 1;
+			//<List>zahyoBlockに色マッチした配列番号を格納
+			selectY += 1;
+			zahyoBlock.Add(new Vector2(selectY,selectX));
+			//現在のカウント数を退避
+			countTmp = count;
+			count = BranchPuzzleBlock (new Vector2 (selectY, selectX), selectColor);
+			//同色カウントインクリメントされるうちは繰り返し一致数を確認する
+			while (countTmp < count) {
+				count = BranchPuzzleBlock (new Vector2 (selectY, selectX), selectColor);
+				countTmp = count;
 			}
+
+		}
+		if (selectColor == downColor) {
+			count += 1;
+			//<List>zahyoBlockに色マッチした配列番号を格納
+			selectY -= 1;
+			zahyoBlock.Add(new Vector2(selectY,selectX));
+			//現在のカウント数を退避
+			countTmp = count;
+			count = BranchPuzzleBlock (new Vector2 (selectY, selectX), selectColor);
+			//同色カウントインクリメントされるうちは繰り返し一致数を確認する
+			while (countTmp < count) {
+				count = BranchPuzzleBlock (new Vector2 (selectY, selectX), selectColor);
+				countTmp = count;
+			}
+
+		}
+		if (selectColor == leftColor) {
+			count += 1;
+			//<List>zahyoBlockに色マッチした配列番号を格納
+			selectX -= 1;
+			zahyoBlock.Add(new Vector2(selectY,selectX));
+			//現在のカウント数を退避
+			countTmp = count;
+			count = BranchPuzzleBlock (new Vector2 (selectY, selectX), selectColor);
+			//同色カウントインクリメントされるうちは繰り返し一致数を確認する
+			while (countTmp < count) {
+				count = BranchPuzzleBlock (new Vector2 (selectY, selectX), selectColor);
+				countTmp = count;
+			}
+
+		}
+		if (selectColor == rightColor) {
+			count += 1;
+			//<List>zahyoBlockに色マッチした配列番号を格納
+			selectX += 1;
+			zahyoBlock.Add(new Vector2(selectY,selectX));
+			//現在のカウント数を退避
+			countTmp = count;
+			count = BranchPuzzleBlock (new Vector2 (selectY, selectX), selectColor);
+			//同色カウントインクリメントされるうちは繰り返し一致数を確認する
+			while (countTmp < count) {
+				count = BranchPuzzleBlock (new Vector2 (selectY, selectX), selectColor);
+				countTmp = count;
+			}
+
 		}
 
-		//forで回すよりピンポイントに上下左右を確認する
-		//上確認
-		if (PuzzleBlockAry [selectY, selectX + 1].GetComponent<PuzzleBlock> ().ColorNum == selectColor) {
-			Debug.Log ("上の色は同色です");
-		} else {
-			Debug.Log (PuzzleBlockAry [selectY, selectX + 1].GetComponent<PuzzleBlock> ().ColorNum);
-			Debug.Log (selectColor);
-		}
-		//下確認
+		Debug.Log ("クリックされた同色の数は" + count);
+		//３以上であれば正常判定を返す
+//		if (count >= 3) {
+//			return true;
+//		} else {
+//			return false;
+//		}
 
-		//左確認
+		//Listの初期化
+		zahyoBlock.Clear();
 
-		//右確認
-
-
-
-
+		//暫定処理
 		return true;
 	}
+
+	private int BranchPuzzleBlock(Vector2 vec,int selectColor){
+		int selectX = (int)vec.x;
+		int selectY = (int)vec.y;
+
+		//タッチされたパズルの上下左右の色を取得(重複しない99を指定
+		int upColor = 99;
+		int downColor = 99;
+		int leftColor = 99;
+		int rightColor = 99;
+
+		upColor = GetUpColor (selectX, selectY);
+		downColor = GetDownColor (selectX, selectY);
+		leftColor = GetLeftColor (selectX, selectY);
+		rightColor = GetRightColor (selectX, selectY);
+
+		//タッチしたパズル色と上下左右に該当する色があるかどうか && 以前判定した座標かどうか
+		if (selectColor == upColor && zahyoBlock.Exists(zahyoBlock => zahyoBlock != vec)) {
+			count += 1;
+			//<List>zahyoBlockに色マッチした配列番号を格納
+			selectY += 1;
+			zahyoBlock.Add(new Vector2(selectY,selectX));
+
+		}
+		if (selectColor == downColor && zahyoBlock.Exists(zahyoBlock => zahyoBlock != vec)) {
+			count += 1;
+			//<List>zahyoBlockに色マッチした配列番号を格納
+			selectY -= 1;
+			zahyoBlock.Add(new Vector2(selectY,selectX));
+		}
+		if (selectColor == leftColor && zahyoBlock.Exists(zahyoBlock => zahyoBlock != vec)) {
+			count += 1;
+			//<List>zahyoBlockに色マッチした配列番号を格納
+			selectX -= 1;
+			zahyoBlock.Add(new Vector2(selectY,selectX));
+		}
+		if (selectColor == rightColor && zahyoBlock.Exists(zahyoBlock => zahyoBlock != vec)) {
+			count += 1;
+			//<List>zahyoBlockに色マッチした配列番号を格納
+			selectX += 1;
+			zahyoBlock.Add(new Vector2(selectY,selectX));
+		}
+
+
+		return count;
+	}
+
 
 	/// <summary>
 	/// クリックしたオブジェクト情報を返す関数
@@ -104,7 +221,7 @@ public class PuzzleController : MonoBehaviour
 	/// 引数：パズル縦列x、横列y
 	/// 戻り値：void
 	/// </summary>
-	private void GetPuzzleBlocks(int x,int y){
+	private void GetPuzzleBlocks(int y,int x){
 		//Inspectorで指定された縦＊横で二次元配列宣言
 		PuzzleBlockAry = new PuzzleBlock[y,x];
 
@@ -125,7 +242,7 @@ public class PuzzleController : MonoBehaviour
 					j * (blockLength + margin)
 				);
 				//初期化する(色(0~4)情報を渡す、マス目位置を渡す)
-				pz.Init (Random.Range (0, 5), new Vector2 (j, i));
+				pz.Init (Random.Range (0, 5), new Vector2 (i, j));
 
 				//生成した情報を配列に格納
 				PuzzleBlockAry[i,j] = pz;
@@ -133,5 +250,77 @@ public class PuzzleController : MonoBehaviour
 		}
 	}
 
+	/// <summary>
+	/// x,y座標を引数にそのパズルの上方向の色を返す関数(該当なければ99を返す
+	/// </summary>
+	/// <returns>The up color.</returns>
+	/// <param name="x">The x coordinate.</param>
+	/// <param name="y">The y coordinate.</param>
+	private int GetUpColor(int x,int y){
+		int color;
+		//要素が最大値を超えて参照しないようにする(例：PuzzleY=3の場合、要素2は一番上となる為参照してはいけない)
+		if (y < (this.PuzzleY - 1)) {
+			color = this.PuzzleBlockAry [x, y + 1].ColorNum;
+		} else {
+			color = 99;
+		}
+
+		return color;
+	}
+
+	/// <summary>
+	/// x,y座標を引数にそのパズルの下方向の色を返す関数(該当なければ99を返す
+	/// </summary>
+	/// <returns>The down color.</returns>
+	/// <param name="x">The x coordinate.</param>
+	/// <param name="y">The y coordinate.</param>
+	private int GetDownColor(int x,int y){
+		int color;
+		//要素が0を下回らないようにする
+		if (y != 0) {
+			color = this.PuzzleBlockAry [x, y - 1].ColorNum;
+		} else {
+			color = 99;
+		}
+
+		return color;
+	}
+
+	/// <summary>
+	/// x,y座標を引数にそのパズルの左方向の色を返す関数(該当なければ99を返す
+	/// </summary>
+	/// <returns>The left color.</returns>
+	/// <param name="x">The x coordinate.</param>
+	/// <param name="y">The y coordinate.</param>
+	private int GetLeftColor(int x,int y){
+		int color;
+		//要素が0を下回らないようにする
+		if (x != 0) {
+			color = this.PuzzleBlockAry [x - 1, y].ColorNum;
+		} else {
+			color = 99;
+		}
+
+		return color;
+	}
+
+	/// <summary>
+	/// x,y座標を引数にそのパズルの右方向の色を返す関数(該当なければ99を返す
+	/// </summary>
+	/// <returns>The right color.</returns>
+	/// <param name="x">The x coordinate.</param>
+	/// <param name="y">The y coordinate.</param>
+	private int GetRightColor(int x,int y){
+		int color;
+
+		//要素が最大値を超えて参照しないようにする(例：PuzzleX=3の場合、要素2は一番端となる為参照してはいけない)
+		if (x < (this.PuzzleX-1)) {
+			color = this.PuzzleBlockAry [x + 1, y].ColorNum;
+		} else {
+			color = 99;
+		}
+
+		return color;
+	}
 
 }

@@ -1,4 +1,99 @@
-﻿//using UnityEngine;
+﻿//回答有難うございます。
+//
+//関数を条件によって再度呼び出したい場合などは
+//繰り返したい関数外で繰り返し処理を実装する方が設計上良いということでしょうか？
+//```
+//void Start(){
+//	int count;
+//	bool judge = SampleFunc();
+//	while(judge == false){
+//		SampleFunc();
+//
+//		count++;
+//		if(count > 25){
+//			//25回以上繰り返す場合はbreakで抜ける
+//			break;
+//		}
+//	}
+//}
+//
+//private bool SampleFunc(){
+//
+//	何らかの処理
+//
+//	if(条件){
+//		return true; 
+//	}else{
+//		return false;
+//	}
+//}
+//```
+
+//抽象的な質問で申し訳ないのですが
+//関数内で条件を満たしてなければ、その関数の頭に戻るような
+//処理を実装できることはUnity上で可能なのでしょうか？
+//```
+//private bool SampleFunc(){
+//
+//	何らかの処理
+//
+//	if(条件){
+//		return true; 
+//	}else{
+//		SampleFuncの頭に戻って処理を再開する
+//	}
+//}
+//```
+//連続で質問すみません。
+//Vector2型に格納した座標を分解して
+//使用したいのですが可能なのでしょうか？
+//
+//例）
+//```
+//private Vector2 vec = new Vector2(1.0f,1,0f);
+//float x = vecのX座標;
+//float y = vecのY座標;
+//```
+//
+//宜しくお願いします。
+
+//回答有難うございます。
+//
+//今確認したのですがタップされた際に
+//Listへ追加する際は正常に格納できているのですが
+//2回目の格納時にエラーとなりうまく格納できていませんでした。
+//
+//```
+//	zahyoBlock.Add(new Vector2(selectY,selectX));
+//	selectY += 1;
+//	zahyoBlock.Add(new Vector2(selectY,selectX));
+//	Debug.Log (zahyoBlock [1]);		//正常に表示される
+//	Debug.Log (zahyoBlock [2]);		//エラーとなって表示される
+//```
+//1回目と2回目の定義に違うはないと思うのですが
+//どうでしょうか？
+
+
+//本日も宜しくお願いします。
+//
+//Listの扱い方についてお聞きしたいのですが
+//グローバル変数でVector2型のListを宣言し
+//```
+//public class PuzzleController : MonoBehaviour
+//{
+//	//3色判定が終わった後のブロック座標を格納
+//	private List<Vector2> zahyoBlock = new List<Vector2>();
+//```
+//Update内のマウスクリックイベント関数内にて
+//List名.Addとしているのですがエラーが発生して原因がわからず困っています。
+//```
+//	//selectX,Yには座標を指定
+//	zahyoBlock.Add(new Vector2(selectY,selectX));
+//```
+//
+//アドバイス頂けないでしょうか？
+
+//using UnityEngine;
 //using System.Collections;
 //
 //public class PuzzleController : MonoBehaviour
