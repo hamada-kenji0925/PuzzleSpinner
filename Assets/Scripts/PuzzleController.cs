@@ -76,13 +76,15 @@ public class PuzzleController : MonoBehaviour
 		rightColor = GetRightColor (selectX, selectY);
 
 		//タッチしたパズル色と上下左右に該当する色があるかどうか
+		//上方向
 		if (selectColor == upColor) {
 			count += 1;
-			//<List>zahyoBlockに色マッチした配列番号を格納
+			//<List>zahyoBlockに色マッチした配列番号を格納(上方向はY軸+1)
 			selectY += 1;
 			zahyoBlock.Add(new Vector2(selectY,selectX));
 			//現在のカウント数を退避
 			countTmp = count;
+			Debug.Log("branchに入る前のcount＝" + count);
 			count = BranchPuzzleBlock (new Vector2 (selectY, selectX), selectColor);
 			//同色カウントインクリメントされるうちは繰り返し一致数を確認する
 			while (countTmp < count) {
@@ -91,6 +93,8 @@ public class PuzzleController : MonoBehaviour
 			}
 
 		}
+
+		//下方向
 		if (selectColor == downColor) {
 			count += 1;
 			//<List>zahyoBlockに色マッチした配列番号を格納
@@ -106,6 +110,8 @@ public class PuzzleController : MonoBehaviour
 			}
 
 		}
+
+		//左方向
 		if (selectColor == leftColor) {
 			count += 1;
 			//<List>zahyoBlockに色マッチした配列番号を格納
@@ -121,6 +127,8 @@ public class PuzzleController : MonoBehaviour
 			}
 
 		}
+
+		//右方向
 		if (selectColor == rightColor) {
 			count += 1;
 			//<List>zahyoBlockに色マッチした配列番号を格納
@@ -137,7 +145,8 @@ public class PuzzleController : MonoBehaviour
 
 		}
 
-		Debug.Log ("クリックされた同色の数は" + count);
+		//デバッグ用
+		Debug.Log ("クリックされたパズルと同色の数は" + count);
 		//３以上であれば正常判定を返す
 //		if (count >= 3) {
 //			return true;
@@ -152,6 +161,12 @@ public class PuzzleController : MonoBehaviour
 		return true;
 	}
 
+	/// <summary>
+	/// タッチ後判定で同色が見つかった際に再度そこから上下左右を確認する関数。countされなくなるまでループする。
+	/// </summary>
+	/// <returns>The puzzle block.</returns>
+	/// <param name="vec">Vec.</param>
+	/// <param name="selectColor">Select color.</param>
 	private int BranchPuzzleBlock(Vector2 vec,int selectColor){
 		int selectX = (int)vec.x;
 		int selectY = (int)vec.y;
@@ -167,27 +182,36 @@ public class PuzzleController : MonoBehaviour
 		leftColor = GetLeftColor (selectX, selectY);
 		rightColor = GetRightColor (selectX, selectY);
 
+
+		//デバッグ用
+//		Debug.Log("-------------------------------------");
+//		for (int i = 0; i < zahyoBlock.Count; i++) {
+//			Debug.Log ("zahyoBlock[" + i + "]の中身は" + zahyoBlock [i]);
+//		}
+//		Debug.Log("-------------------------------------");
+
 		//タッチしたパズル色と上下左右に該当する色があるかどうか && 以前判定した座標かどうか
-		if (selectColor == upColor && zahyoBlock.Exists(zahyoBlock => zahyoBlock != vec)) {
+		if (selectColor == upColor && zahyoBlock.Contains(vec) == false) {
 			count += 1;
 			//<List>zahyoBlockに色マッチした配列番号を格納
 			selectY += 1;
 			zahyoBlock.Add(new Vector2(selectY,selectX));
+			Debug.Log("branchに入った後のcount数=" + count);
 
 		}
-		if (selectColor == downColor && zahyoBlock.Exists(zahyoBlock => zahyoBlock != vec)) {
+		if (selectColor == downColor && zahyoBlock.Contains(vec) == false) {
 			count += 1;
 			//<List>zahyoBlockに色マッチした配列番号を格納
 			selectY -= 1;
 			zahyoBlock.Add(new Vector2(selectY,selectX));
 		}
-		if (selectColor == leftColor && zahyoBlock.Exists(zahyoBlock => zahyoBlock != vec)) {
+		if (selectColor == leftColor && zahyoBlock.Contains(vec) == false) {
 			count += 1;
 			//<List>zahyoBlockに色マッチした配列番号を格納
 			selectX -= 1;
 			zahyoBlock.Add(new Vector2(selectY,selectX));
 		}
-		if (selectColor == rightColor && zahyoBlock.Exists(zahyoBlock => zahyoBlock != vec)) {
+		if (selectColor == rightColor && zahyoBlock.Contains(vec) == false) {
 			count += 1;
 			//<List>zahyoBlockに色マッチした配列番号を格納
 			selectX += 1;
