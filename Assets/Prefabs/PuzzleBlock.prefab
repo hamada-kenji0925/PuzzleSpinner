@@ -73,6 +73,7 @@ MonoBehaviour:
   - {fileID: 21300014, guid: c6c218e0e4016483e82b587466a64e40, type: 3}
   - {fileID: 21300016, guid: c6c218e0e4016483e82b587466a64e40, type: 3}
   - {fileID: 21300018, guid: c6c218e0e4016483e82b587466a64e40, type: 3}
+  - {fileID: 10917, guid: 0000000000000000f000000000000000, type: 0}
   _blockPosition: {x: 0, y: 0}
   _colorNum: 0
 --- !u!114 &114858237075416886

@@ -138,8 +138,8 @@ MonoBehaviour:
   _puzzleBlockPrefab: {fileID: 114811561915885324, guid: 46c3efc5458844a0fa8514bd5246a0c0,
     type: 2}
   _puzzleBlockParent: {fileID: 1703044296}
-  PuzzleX: 10
-  PuzzleY: 10
+  PuzzleX: 5
+  PuzzleY: 5
 --- !u!4 &320434705
 Transform:
   m_ObjectHideFlags: 0
