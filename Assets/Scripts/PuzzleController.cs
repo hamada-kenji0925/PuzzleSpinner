@@ -33,6 +33,8 @@ public class PuzzleController : MonoBehaviour
 	//選択したパズルが３つ以上存在するか判定
 	private bool Judge;
 
+	private int matchCount;
+
 	// Use this for initialization
 	void Start ()
 	{
@@ -49,12 +51,6 @@ public class PuzzleController : MonoBehaviour
 		if (go != null) {
 			Judge = SearchBlock(go);
 
-			//debug確認用loop
-			foreach (Vector2 lv in searchAfterBlock) {
-				Debug.Log (lv);
-			}
-			//debug確認用loop
-
 		}
 
 		if (Judge) {
@@ -62,14 +58,39 @@ public class PuzzleController : MonoBehaviour
 			//3つ以上一致した場合、該当パズルの配列要素をnullにする
 			deletePuzzleBlock (searchAfterBlock);
 
+			//スコアスクリプトへ値渡しするのに関数コール
+			GetPuzzleScore();
+
 			//Judge変数の初期化
 			Judge = false;
 		}
+
+		//得点を随時更新していく
+		matchCount = searchAfterBlock.Count;
 
 		//使用済みListの初期化
 		searchAfterBlock.Clear ();
 
 	}
+
+	/// <summary>
+	/// 一致したパズル数を他スクリプトへ値渡しする関数
+	/// </summary>
+	/// <value>searchAfterBlockに格納されているCount数</value>
+	public int GetPuzzleCount{
+		get{ return matchCount; }
+		private set{ matchCount = searchAfterBlock.Count; }
+	}
+
+	/// <summary>
+	/// 一致したパズル数を他スクリプトへ値渡しする関数
+	/// </summary>
+	/// <returns>The puzzle score.</returns>
+	/// <param name="matchPuzzleNumber">searchAfterBlockに格納されているCount数</param>
+	public int GetPuzzleScore(){
+		return searchAfterBlock.Count;
+	}
+
 
 	/// <summary>
 	/// 縦横列の数を与えるとその数に応じたパズルブロックを画面上に生成する関数
