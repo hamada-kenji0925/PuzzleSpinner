@@ -48,6 +48,13 @@ public class PuzzleController : MonoBehaviour
 		//クリック判定
 		if (go != null) {
 			Judge = SearchBlock(go);
+
+			//debug確認用loop
+			foreach (Vector2 lv in searchAfterBlock) {
+				Debug.Log (lv);
+			}
+			//debug確認用loop
+
 		}
 
 		if (Judge) {
@@ -209,6 +216,7 @@ public class PuzzleController : MonoBehaviour
 
 		//探索終了したパズルブロック数を代入
 		countPuzzle = searchAfterBlock.Count;
+		Debug.Log ("SearchBlock関数を抜ける際のパズル一致数は" + countPuzzle);
 
 		//関数内で使用したListの初期化(searchAfterBlockはグローバル変数の為update内にてClear処理実施
 		searchPuzzleBlock.Clear ();
@@ -240,11 +248,8 @@ public class PuzzleController : MonoBehaviour
 			int blockAryY = (int)searchNormalBlock [i].y;
 
 			//該当するPuzzleBlockAry配列の画像に透明画像を設定する
-			//PuzzleBlockAry [blockAryY, blockAryX].Init (5, new Vector2 (blockAryY, blockAryX));
 			PuzzleBlockAry [blockAryY, blockAryX].Init (5, new Vector2 (blockAryX, blockAryY));
 		}
-
-		//for(int x = 0; x < )
 
 		//透明画像が存在している場合にloop
 		while (NotTransparent == false) {
@@ -294,7 +299,7 @@ public class PuzzleController : MonoBehaviour
 
 					//確認するブロックのY軸が最大要素数か？ && ブロックカラーが透明か？　なら色をランダムに指定
 				} else if (blockY == (PuzzleY - 1) && block.ColorNum == 5) {
-					PuzzleBlockAry [blockY, blockX].Init (Random.Range (0, maxPiece), new Vector2 (blockY, blockX));
+					PuzzleBlockAry [blockY, blockX].Init (Random.Range (0, maxPiece), new Vector2 (blockX, blockY));
 				}
 			}
 
