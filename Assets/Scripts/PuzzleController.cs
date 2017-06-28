@@ -2,6 +2,8 @@
 using System.Collections;
 //Listの為、定義
 using System.Collections.Generic;
+//DOTweenの為、定義
+using DG.Tweening;
 
 public class PuzzleController : MonoBehaviour
 {
@@ -14,6 +16,12 @@ public class PuzzleController : MonoBehaviour
 
 	[SerializeField]
 	private Transform _puzzleBlockParent;
+
+	//ブロックとブロックの隙間
+	private float margin = 5f;
+
+	//ブロックの大きさ
+	private float blockLength = 80f;
 
 	//パズル列数はInspector上で指定
 	[SerializeField]
@@ -56,7 +64,10 @@ public class PuzzleController : MonoBehaviour
 		if (Judge) {
 
 			//3つ以上一致した場合、該当パズルの配列要素をnullにする
-			deletePuzzleBlock (searchAfterBlock);
+			//deletePuzzleBlock (searchAfterBlock);
+
+			//暫定処理（最終的にはこちら関数へ以降予定========================================>
+			ReplacePuzzleBlock(searchAfterBlock);
 
 			//スコアスクリプトへ値渡しするのに関数コール
 			GetPuzzleScore();
@@ -100,12 +111,6 @@ public class PuzzleController : MonoBehaviour
 	private void GetPuzzleBlocks(int y,int x){
 		//Inspectorで指定された縦＊横で二次元配列宣言
 		PuzzleBlockAry = new PuzzleBlock[y,x];
-
-		//ブロックとブロックの隙間
-		float margin = 5f;
-
-		//ブロックの大きさ
-		float blockLength = 80f;
 
 		//宣言された二次元配列にランダムに_puzzleBlockPrefab格納
 		for (int i = 0; i < y; i++) {
@@ -339,5 +344,72 @@ public class PuzzleController : MonoBehaviour
 			}
 
 		}
+	}
+
+	/// <summary>
+	/// 引数で受け取ったパズルブロックを消して、上にあるブロックが折りてくるように見せるアニメーション
+	/// </summary>
+	/// <param name="searchNormalBlock">一致したブロック座標</param>
+	private void ReplacePuzzleBlock(List<Vector2> replaceBlock){
+
+		//①消す必要のあるブロック座標とX、Y軸番号を記憶
+		//リスト-Pos X,Y-
+		List<float> deleteBlockX = new List<float>();
+		List<float> deleteBlockY = new List<float>();
+		//リスト-XY座標-
+		List<Vector2> deleteXY = new List<Vector2>();
+
+		//リスト-GameObject-
+		List<GameObject> moveBlock = new List<GameObject>();
+
+		//一致したいブロック座標があるだけloopして記憶
+		for (int i = 0; i < replaceBlock.Count; i++) {
+
+			//Vector2情報を元に該当するゲームオブジェクトに当たるまでloop
+			foreach(PuzzleBlock replacePuzzle in PuzzleBlockAry){
+				//Vector2情報の比較(一致したブロック座標　＝＝　パズル配列のblockPosition)
+				if(replaceBlock[i] == replacePuzzle.BlockPosition){
+
+					//消していくブロックの座標を記憶
+					deleteBlockX.Add(replacePuzzle.transform.localPosition.x);
+					deleteBlockY.Add(replacePuzzle.transform.localPosition.y);
+					//消していくブロックのblockPositionを記憶
+					deleteXY.Add (replacePuzzle.BlockPosition);
+
+				}
+
+			}
+		}
+
+		//②一致したパズル座標を上へ持っていく && ③移動させたブロック色をランダムに変更
+		for(int i = 0;i < replaceBlock.Count;i++){
+		
+			//該当するブロック配列のGameObject情報を取得
+			moveBlock.Add(PuzzleBlockAry [(int)deleteXY [i].y, (int)deleteXY [i].x].gameObject);
+
+			moveBlock[i].transform.localPosition = new Vector2 (
+				deleteBlockX [i],
+				(float)(PuzzleY + i) * (margin + blockLength)
+			);
+
+			//色をランダムに設定
+			PuzzleBlockAry [(int)deleteXY [i].y, (int)deleteXY [i].x].Init(
+				Random.Range(0,maxPiece),
+				new Vector2(replaceBlock[i].x,replaceBlock[i].y)
+			);
+
+		}
+
+		//④整列させたい
+		for(int i = 0;i<moveBlock.Count;i++){
+			for (int j = 0; j < moveBlock.Count; j++) {
+				
+			}
+		}
+
+		//④最後ブロック移動アニメーションを・・・
+		//⑤blockPositionの番号を整理し直す
+
+		//消していくブロックを画面外に一旦移動
 	}
 }
