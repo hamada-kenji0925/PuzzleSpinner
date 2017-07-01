@@ -19,7 +19,6 @@ public class PuzzleController : MonoBehaviour
 
 	//ブロックとブロックの隙間
 	private float margin = 5f;
-
 	//ブロックの大きさ
 	private float blockLength = 80f;
 
@@ -29,7 +28,7 @@ public class PuzzleController : MonoBehaviour
 	[SerializeField]
 	private int PuzzleY = 1;
 
-	//PuzzleのMaxピース数
+	//生成されるPuzzleBlockの種類
 	private int maxPiece = 4;
 
 	//Puzzleの一致判定数
@@ -42,6 +41,9 @@ public class PuzzleController : MonoBehaviour
 	private bool Judge;
 
 	private int matchCount;
+
+	//ブロック生成した際のオブジェクトPositionを記憶するList生成
+	private List<Vector3> createBlockPos = new List<Vector3>();
 
 	// Use this for initialization
 	void Start ()
@@ -124,6 +126,9 @@ public class PuzzleController : MonoBehaviour
 					j * (blockLength + margin),
 					i * (blockLength + margin)
 				);
+
+				//replacePuzzleBlock関数で使用する為、格納
+				createBlockPos.Add(pz.transform.localPosition);
 				//初期化する(色(0~4)情報を渡す、マス目位置を渡す)
 				pz.Init (Random.Range (0, maxPiece), new Vector2 (j, i));
 
@@ -356,13 +361,12 @@ public class PuzzleController : MonoBehaviour
 		//リスト-Pos X,Y-
 		List<float> deleteBlockX = new List<float>();
 		List<float> deleteBlockY = new List<float>();
-		//リスト-XY座標-
-		List<Vector2> deleteXY = new List<Vector2>();
 
 		//リスト-GameObject-
 		List<GameObject> moveBlock = new List<GameObject>();
 
-		//一致したいブロック座標があるだけloopして記憶
+		//①引数とPuzzleBlockAry配列を比較し、一致すれば
+		//移動させるブロックPosX,YとGameObjectをListへ格納し、適当な位置へ移動
 		for (int i = 0; i < replaceBlock.Count; i++) {
 
 			//Vector2情報を元に該当するゲームオブジェクトに当たるまでloop
@@ -370,46 +374,154 @@ public class PuzzleController : MonoBehaviour
 				//Vector2情報の比較(一致したブロック座標　＝＝　パズル配列のblockPosition)
 				if(replaceBlock[i] == replacePuzzle.BlockPosition){
 
-					//消していくブロックの座標を記憶
+					//消していくブロックの座標を記憶(PosX,Y）
 					deleteBlockX.Add(replacePuzzle.transform.localPosition.x);
 					deleteBlockY.Add(replacePuzzle.transform.localPosition.y);
-					//消していくブロックのblockPositionを記憶
-					deleteXY.Add (replacePuzzle.BlockPosition);
 
+					//該当するブロック配列のGameObject情報を取得
+					moveBlock.Add (PuzzleBlockAry [(int)replacePuzzle.BlockPosition.y,
+						(int)replacePuzzle.BlockPosition.x].gameObject);
+
+					//一致したブロックを適当なところへ退避
+					PuzzleBlockAry [(int)replacePuzzle.BlockPosition.y,
+						(int)replacePuzzle.BlockPosition.x].transform.position = new Vector2 (
+						5, 5);
 				}
 
 			}
 		}
 
-		//②一致したパズル座標を上へ持っていく && ③移動させたブロック色をランダムに変更
-		for(int i = 0;i < replaceBlock.Count;i++){
-		
-			//該当するブロック配列のGameObject情報を取得
-			moveBlock.Add(PuzzleBlockAry [(int)deleteXY [i].y, (int)deleteXY [i].x].gameObject);
+		//①-②List.replaceBlockの中身をソート
 
-			moveBlock[i].transform.localPosition = new Vector2 (
-				deleteBlockX [i],
-				(float)(PuzzleY + i) * (margin + blockLength)
-			);
+		//暫定でreplaceBlock[0を最小値としてソートしていく
+		int minNum;
+		//sort時の入れ替え時に退避させる変数
+		Vector2 tempBlock;
 
-			//色をランダムに設定
-			PuzzleBlockAry [(int)deleteXY [i].y, (int)deleteXY [i].x].Init(
-				Random.Range(0,maxPiece),
-				new Vector2(replaceBlock[i].x,replaceBlock[i].y)
-			);
-
+		Debug.Log ("ソート前");
+		for (int i = 0; i < replaceBlock.Count; i++) {
+			Debug.Log (replaceBlock [i]);
 		}
 
-		//④整列させたい
-		for(int i = 0;i<moveBlock.Count;i++){
-			for (int j = 0; j < moveBlock.Count; j++) {
+		for (int i = 0; i < replaceBlock.Count; i++) {
+
+			minNum = i;
+
+			for(int j = i+1;j < replaceBlock.Count;j++) {
+				//minBlockの値より
+				if (
+					((int)(replaceBlock [minNum].y * 10) + (int)replaceBlock [minNum].x) >
+					(int)(replaceBlock [j].y * 10) + (int)(replaceBlock [j].x)) {
+
+					//最小値だった要素を入れ替えておく
+					minNum = j;
+					 
 				
+				}
+				tempBlock = replaceBlock [i];
+				replaceBlock [i] = replaceBlock [minNum];
+				replaceBlock [minNum] = tempBlock;
+
+
 			}
+
 		}
+
+		Debug.Log ("ソート後");
+		for (int i = 0; i < replaceBlock.Count; i++) {
+			Debug.Log (replaceBlock [i]);
+		}
+
+
+		//②移動されたブロックを同じPosX上の冗談に順番に積み上げていく
+//		for (int i = PuzzleY; i < (PuzzleY + PuzzleY); i++) {
+//			for (int j = PuzzleX; i < (PuzzleX + PuzzleX); j++) {
+//
+//				//移動されているブロックを同じPosX上に移動させる（PosY+1~始める）
+//				if(replaceBlock
+//			}
+//		}
+			
+
+//		//createBlockPosの要素番号カウント
+//		int count = 0;
+//
+//		//一致したブロックの整列
+//		foreach (GameObject go in moveBlock) {
+//			for (int i = 0; i < PuzzleY; i++) {
+//				for (int j = 0; j < PuzzleX; j++) {
+//					if (createBlockPos [count] != PuzzleBlockAry [i, j].transform.localPosition) {
+//						Debug.Log("一致しなかった配列は" + i + "," + j + "です");
+//					}
+//				}
+//			}
+//			count++;
+//		}
+
+
+
+		//②一致したパズル座標を上へ持っていく && ③移動させたブロック色をランダムに変更
+//		for(int i = 0;i < replaceBlock.Count;i++){
+//		
+//			//取得したGameObject情報を元にPositionを設定
+//			moveBlock[i].transform.localPosition = new Vector2 (
+//				deleteBlockX [i],
+//				(float)(PuzzleY + i) * (margin + blockLength)
+//			);
+//
+//			//色をランダムに設定
+//			PuzzleBlockAry [(int)deleteXY [i].y, (int)deleteXY [i].x].Init(
+//				Random.Range(0,maxPiece),
+//				new Vector2(replaceBlock[i].x,replaceBlock[i].y)
+//			);
+//
+//		}
+
+		//⬇️アニメーションは正常に動くがPuzzleBlockAryのオブジェクト情報が入れ替わっていない為
+		//上に移動させたブロックがおりてきてしまうので
+		//上に移動させたときに配列を詰める処理をしないと正常に動かない
+
+		//③整列させたい
+		//とりあえず今はそのままにしておこう・・・
+
+		//createBlockPosの要素番号カウント
+//		int count = 0;
 
 		//④最後ブロック移動アニメーションを・・・
+//		for (int i = 0; i < (PuzzleY); i++) {
+//			for (int j = 0; j < (PuzzleX); j++) {
+//
+//				//PuzzleBlockAry配列を順番に比較し生成された時のポジションとズレがあれば
+//				//上ブロックを下へ移動させる
+//				if (createBlockPos [count] == PuzzleBlockAry [i, j].transform.localPosition) {
+//					//Debug.Log ("配列番号[" + i + "," + j + "]でポジション一致しました");
+//					//Debug.Log("createBlockPos" + createBlockPos [count]);
+//					//Debug.Log("PuzzleBlockAry" + PuzzleBlockAry[i,j].transform.localPosition);
+//				//上ブロックPositionが生成された時と一致していれば上ブロックを消したブロック位置に移動
+//				} else if (createBlockPos [count + PuzzleX] == PuzzleBlockAry [i + 1, j].transform.localPosition){
+//					//生成されたポジションと現在ポジションに差がある場合
+//					//アニメーションにより移動させる
+//					GameObject PUZZLE = PuzzleBlockAry [i + 1, j].gameObject;
+//					PUZZLE.GetComponent<RectTransform> ().DOLocalMoveY (
+//						createBlockPos [count].y,
+//						1,
+//						false
+//					);
+//
+//				}
+//
+//				//Debug.Log("createBlockPos" + createBlockPos [count]);
+//				//Debug.Log("PuzzleBlockAry" + PuzzleBlockAry[i,j].transform.localPosition);
+//
+//
+//				//createBlockPosの要素番号インクリメント
+//				count++;
+//			}
+//		}
+
 		//⑤blockPositionの番号を整理し直す
 
 		//消していくブロックを画面外に一旦移動
 	}
 }
+
