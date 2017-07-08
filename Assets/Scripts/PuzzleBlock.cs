@@ -31,7 +31,7 @@ public class PuzzleBlock : MonoBehaviour
 			return _blockPosition;
 		}	
 	}
-
+		
 	/// <summary>
 	/// 色情報
 	/// </summary>

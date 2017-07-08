@@ -42,12 +42,18 @@ public class PuzzleController : MonoBehaviour
 
 	private int matchCount;
 
-	//ブロック生成した際のオブジェクトPositionを記憶するList生成
-	private List<Vector3> createBlockPos = new List<Vector3>();
+	//ブロック生成した際のオブジェクトPositionを記憶する配列
+	private Vector3[,] createBlockPos;
+
+	//ブロックが落ちるアニメーション時間
+	private float animeTime = 1f;
 
 	// Use this for initialization
 	void Start ()
 	{
+		//生成時の座標を格納する二次元配列の要素数宣言
+		createBlockPos = new Vector3[PuzzleY,PuzzleX];
+
 		//指定した列数のパズルブロック要求
 		GetPuzzleBlocks(PuzzleX,PuzzleY);
 	}
@@ -55,20 +61,18 @@ public class PuzzleController : MonoBehaviour
 	// Update is called once per frame
 	void Update ()
 	{
+
 		//クリックしたオブジェクト情報の取得
 		GameObject go = GetClickPuzzleBlock();
 		//クリック判定
-		if (go != null) {
+		if (go != null && Judge == false) {
 			Judge = SearchBlock(go);
 
 		}
 
 		if (Judge) {
 
-			//3つ以上一致した場合、該当パズルの配列要素をnullにする
-			//deletePuzzleBlock (searchAfterBlock);
-
-			//暫定処理（最終的にはこちら関数へ以降予定========================================>
+			//
 			ReplacePuzzleBlock(searchAfterBlock);
 
 			//スコアスクリプトへ値渡しするのに関数コール
@@ -128,7 +132,7 @@ public class PuzzleController : MonoBehaviour
 				);
 
 				//replacePuzzleBlock関数で使用する為、格納
-				createBlockPos.Add(pz.transform.localPosition);
+				createBlockPos [i, j] = pz.transform.localPosition;
 				//初期化する(色(0~4)情報を渡す、マス目位置を渡す)
 				pz.Init (Random.Range (0, maxPiece), new Vector2 (j, i));
 
@@ -227,7 +231,8 @@ public class PuzzleController : MonoBehaviour
 					}
 
 					//判定したいブロックを取得
-					PuzzleBlock targetPuzzleBlock = this.PuzzleBlockAry[(int)targetIndex.y,(int)targetIndex.x];
+					PuzzleBlock targetPuzzleBlock = this.PuzzleBlockAry[(int)targetIndex.y,(int)targetIndex.x];			//< =========== ここでPuzzleBlockAryを元に判定したいブロック情報を取得している為、二回め以降異常が発生
+
 					//判定したいブロック色を取得
 					int targetColor = targetPuzzleBlock.ColorNum;
 
@@ -263,95 +268,6 @@ public class PuzzleController : MonoBehaviour
 	}
 
 	/// <summary>
-	/// 引数で渡されたListに入っている座標のパズル配列を削除する関数
-	/// </summary>
-	/// <param name="searchNormalBlock">探索後のパズル情報List</param>
-	private void deletePuzzleBlock (List<Vector2> searchNormalBlock)
-	{
-
-		//透明画像の存在フラグ
-		bool NotTransparent = false;
-
-		//一致したパズルブロックのimgを透明画像に差し替える
-		for (int i = 0; i < searchNormalBlock.Count; i++) {
-			//一致したパズルブロック座標を分解して代入
-			int blockAryX = (int)searchNormalBlock [i].x;
-			int blockAryY = (int)searchNormalBlock [i].y;
-
-			//該当するPuzzleBlockAry配列の画像に透明画像を設定する
-			PuzzleBlockAry [blockAryY, blockAryX].Init (5, new Vector2 (blockAryX, blockAryY));
-		}
-
-		//透明画像が存在している場合にloop
-		while (NotTransparent == false) {
-
-			//PuzzleBlockAry要素数分loop
-			foreach (PuzzleBlock block in PuzzleBlockAry) {
-
-				//比較の為、配列からX・Y軸、色番号を取得
-				int blockX = (int)block.BlockPosition.x;
-				int blockY = (int)block.BlockPosition.y;
-
-				//確認するブロックのY軸が要素数をオーバーしていないか && ブロックカラーは透明か確認
-				if (blockY < (PuzzleY - 1) && block.ColorNum == 5) {
-
-					//上ブロック色を取得
-					int upBlockColor = PuzzleBlockAry [blockY + 1, blockX].ColorNum;
-
-					//上のブロックが透明でなかった場合
-					if (upBlockColor != 5) {
-
-						//取得したブロック色を自ブロックに設定
-						block.Init (upBlockColor, new Vector2 (blockX, blockY));
-						//上ブロックの色を透明色に設定(自ブロックは必ず透明(5)の為、直打ち設定
-						PuzzleBlockAry [blockY + 1, blockX].Init (5, new Vector2 (blockX, blockY + 1));
-					} else {
-						//上のブロックが透明だった場合
-						for (int i = 0; i < (PuzzleY - 1); i++) {
-
-							//Y軸がオーバーフローして参照されないように条件指定する
-							if ((blockY + i) < (PuzzleY - 1)) {
-
-								//上ブロック色を取得
-								int BlockColor = PuzzleBlockAry [blockY + i, blockX].ColorNum;
-
-								//上のブロックが透明でなかった場合
-								if(BlockColor != 5){
-									//取得したブロック色を自ブロックに設定
-									block.Init (BlockColor, new Vector2 (blockX, blockY));
-									//上ブロックの色を自ブロック色に設定(自ブロックは必ず透明(5)の為、直打ち設定
-									PuzzleBlockAry [blockY + i, blockX].Init (5, new Vector2 (blockX, blockY + i));
-								}
-							}
-
-						}
-					}
-
-
-					//確認するブロックのY軸が最大要素数か？ && ブロックカラーが透明か？　なら色をランダムに指定
-				} else if (blockY == (PuzzleY - 1) && block.ColorNum == 5) {
-					PuzzleBlockAry [blockY, blockX].Init (Random.Range (0, maxPiece), new Vector2 (blockX, blockY));
-				}
-			}
-
-
-			//配列をもう一度見直し、img透明が含まれていないことを確認する
-			foreach (PuzzleBlock pb in PuzzleBlockAry) {
-
-				//img透明が存在するか確認
-				if (pb.ColorNum != 5) {
-					NotTransparent = true;
-				} else {
-					//一つでも透明ブロックがあればフラグをfalse
-					NotTransparent = false;
-					break;
-				}
-			}
-
-		}
-	}
-
-	/// <summary>
 	/// 引数で受け取ったパズルブロックを消して、上にあるブロックが折りてくるように見せるアニメーション
 	/// </summary>
 	/// <param name="searchNormalBlock">一致したブロック座標</param>
@@ -374,7 +290,7 @@ public class PuzzleController : MonoBehaviour
 				//Vector2情報の比較(一致したブロック座標　＝＝　パズル配列のblockPosition)
 				if(replaceBlock[i] == replacePuzzle.BlockPosition){
 
-					//消していくブロックの座標を記憶(PosX,Y）
+					//消していくブロックの座標を記憶(PosX,Y）									<=======いらないかも以後使ってない・・・・
 					deleteBlockX.Add(replacePuzzle.transform.localPosition.x);
 					deleteBlockY.Add(replacePuzzle.transform.localPosition.y);
 
@@ -402,6 +318,17 @@ public class PuzzleController : MonoBehaviour
 						go.transform.localPosition.x,
 						(float)(PuzzleY + Reserve) * (margin + blockLength));
 
+					//移動させたタイミングでカラーをランダムに変更
+					go.GetComponent<PuzzleBlock> ().Init (
+						Random.Range (0, 5),
+						new Vector2 (
+							go.GetComponent<PuzzleBlock> ().BlockPosition.x,
+							go.GetComponent<PuzzleBlock> ().BlockPosition.y
+						)
+					);
+
+
+
 					//同じX軸なら積み上げ段数をインクリメント
 					Reserve++;
 				}
@@ -410,40 +337,155 @@ public class PuzzleController : MonoBehaviour
 		}
 
 		//③座標の移動・整列
-		//createBlockPosカウント用
-		int count = 0;
-		int upCount = PuzzleY;
-
 		//PuzzleBlockAryを順番に確認していく
 		for (int i = 0; i < PuzzleY; i++) {
 			for (int j = 0; j < PuzzleX; j++) {
 
 				//ブロック生成時のPosと現在のPosにズレがないか比較する
-				if (createBlockPos [count] != PuzzleBlockAry [i, j].transform.localPosition) {
-					
-					//ズレてたら消えたブロックの上ブロックを順番に確認
-					for (int k = i; k < PuzzleY; k++) {
+				if (createBlockPos [i, j] != PuzzleBlockAry [i, j].transform.localPosition) {
+					//Debug.Log ("座標が一致しなかったブロックは" + createBlockPos [i, j]);
 
-						Debug.Log (upCount);		//<==ここでcreateBlockPosの要素がオーバーフローしてしまう
-						//ズレてないブロックを見つける
-						if (createBlockPos [upCount] == PuzzleBlockAry [k, j].transform.localPosition) {
+					//ズレているブロックの上を確認していく
+					int upPosY = i+1;	//確認する時のY軸の一つ上を元にする
+
+					//ズレていたBlockPositionから上をloopで確認
+					while(upPosY < PuzzleY){
+
+						//生成時のBlockPositionと現在のPuzzleBlockAryのPositionを比較
+						if (PuzzleBlockAry [upPosY, j].transform.localPosition == createBlockPos [upPosY, j]) {
+//							Debug.Log ("上ブロックは" + createBlockPos [upPosY, j]);
+//							Debug.Log ("上ブロックを移動させる先の座標は" + createBlockPos [i, j]);
+							//上に存在するゲームオブジェクトを下へ移動させる
+
+							//該当ブロックのゲームオブジェクトを取得
+//							GameObject go = PuzzleBlockAry [upPosY, j].gameObject;
+//							go.GetComponent<RectTransform>().transform.DOLocalMove(
+//								new Vector3(createBlockPos[i,j].x,createBlockPos[i,j].y),
+//								animeTime,
+//								false
+//							).OnComplete(() => {
+//								EndAnime = true;
+//								Debug.Log(EndAnime);
+//							});
+
+							//StartCoroutine(ProcessAnime(go,i,j));
+
+							//普通にトランスフォームさせると移動できている
+							PuzzleBlockAry [upPosY, j].transform.localPosition = 
+								new Vector3 (createBlockPos [i, j].x, createBlockPos [i, j].y);
+
+							break;
 							
+						}
 
-						}
-						if (k < (PuzzleY - 1)) {
-							continue;
-						} else {
-							upCount = upCount + (PuzzleY * k);
-						}
+						upPosY++;
+
 					}
 				}
 
-				//createBlockPos要素カウント
-				count++;
 			}
 			
 		}
 
+		//上段にあげたブロックを下げる処理
+		for (int i = 0; i < PuzzleX; i++) {
+			//ブロックを下ろす数
+			int Down = 1;
+
+			//上段へ積み上げたブロックを全て確認
+			foreach (GameObject go in moveBlock) {
+
+				//X軸が一致したブロックを下げる
+				if (go.GetComponent<PuzzleBlock> ().BlockPosition.x == i) {
+
+					//一段下げる
+					go.transform.localPosition = new Vector2 (
+						go.transform.localPosition.x,
+						(float)(PuzzleY - Down) * (margin + blockLength));
+
+					//同じX軸なら積み下げ段数をインクリメント
+					Down++;
+				}
+			}
+		}
+
+		//正しいBlockPotionを設定する際に、順番にカラーを記憶しておく
+		List<int> memoryColor = new List<int>();
+
+		//PuzzleBlockAryのBlockPositionを正す
+		for (int i = 0; i < PuzzleY;i++) {
+			for (int j = 0; j < PuzzleX; j++) {
+
+				//生成時ポジションと同じ位置にあるBlockのBlockPositionを書き換える為、PuzzleBlockAryをloopさせて確認
+				foreach (PuzzleBlock pb in PuzzleBlockAry) {
+					
+					//1loopにつき、必ず一回は一致する
+					if (createBlockPos [i, j] == pb.transform.localPosition) {
+
+						//正しいBlockPositionを設定
+						pb.Init (
+							pb.ColorNum,
+							new Vector2 (j, i)
+						);
+
+						//配置替えを行った最終的なColorNumを順番に格納（[0,0],[0,1],[0,2]〜
+						memoryColor.Add (pb.ColorNum);
+								
+					}
+				}
+
+			}
+		}
+
+		//GameObjectの並びがバラバラになる為、一旦配列に格納されているGameObjectを削除 <==GameObjectの並び替え方法がわかればそちらを採用した方が断然良い
+		for (int i = 0; i < PuzzleY; i++) {
+			for (int j = 0; j < PuzzleX; j++) {
+				Destroy (PuzzleBlockAry [i, j].gameObject);
+
+			}
+		}
+
+		//List<memoryColor>の要素カウント用
+		int colorCount = 0;
+
+		//宣言された二次元配列にランダムに_puzzleBlockPrefab格納
+		for (int i = 0; i < PuzzleY; i++) {
+			for (int j = 0; j < PuzzleX; j++) {
+				//PuzzleBlockプレハブを生成して親オブジェクトを指定する
+				PuzzleBlock pz = Instantiate (_puzzleBlockPrefab, _puzzleBlockParent);
+				//位置を決定
+				pz.transform.localPosition = new Vector2 (
+					j * (blockLength + margin),
+					i * (blockLength + margin)
+				);
+
+				//replacePuzzleBlock関数で使用する為、格納
+				createBlockPos [i, j] = pz.transform.localPosition;
+				//初期化する(色(0~4)情報を渡す、マス目位置を渡す)
+				pz.Init (memoryColor[colorCount], new Vector2 (j, i));
+
+				colorCount++;
+
+				//生成した情報を配列に格納
+				PuzzleBlockAry[i,j] = pz;
+			}
+		}
+
+
+	
+	}
+
+
+
+	private IEnumerator ProcessAnime(GameObject blockObject,int y,int x){
+		//該当ブロックのゲームオブジェクトを取得
+		blockObject.GetComponent<RectTransform>().transform.DOLocalMove(
+			new Vector3(createBlockPos[y,x].x,createBlockPos[y,x].y),
+			animeTime,
+			false
+		);
+
+		yield return new WaitForSeconds(animeTime);
 	}
 }
 
